@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Employee Attendance",
+    "slug": "employee-attendance",
+    "scheme": "attendance",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Employee Attendance to capture your location for check-in and check-out."
+        }
+      ],
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "android": {
+      "package": "com.example.employeeattendance"
+    },
+    "ios": {
+      "bundleIdentifier": "com.example.employeeattendance"
+    }
+  }
+}

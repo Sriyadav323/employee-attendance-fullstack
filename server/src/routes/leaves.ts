@@ -1,0 +1,4 @@
+import { Router } from 'express'; import { z } from 'zod'; import { Leave } from '../models/Leave.js'; import { inclusiveDays,dateKey } from '../utils/date.js';
+export const leaveRouter=Router();
+leaveRouter.post('/',async(req,res)=>{ const b=z.object({leaveType:z.enum(['Sick','Casual','Vacation','Unpaid']),fromDate:z.string(),toDate:z.string(),reason:z.string().trim().min(1)}).parse(req.body); if(b.fromDate<dateKey())return res.status(400).json({message:'Past dates are not allowed'}); if(b.fromDate>b.toDate)return res.status(400).json({message:'From date cannot exceed to date'}); const leave=await Leave.create({...b,userId:req.userId,days:inclusiveDays(b.fromDate,b.toDate)}); res.status(201).json(leave); });
+leaveRouter.get('/',async(req,res)=>res.json(await Leave.find({userId:req.userId}).sort({createdAt:-1})));

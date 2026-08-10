@@ -1,0 +1,3 @@
+import { Router } from 'express'; import { Attendance } from '../models/Attendance.js'; import { User } from '../models/User.js'; import { dateKey } from '../utils/date.js';
+export const dashboardRouter=Router();
+dashboardRouter.get('/',async(req,res)=>{ const [user,attendance]=await Promise.all([User.findById(req.userId),Attendance.findOne({userId:req.userId,attendanceDate:dateKey()})]); if(!user)return res.status(404).json({message:'User not found'}); let status='Not checked in'; if(attendance?.checkInAt)status=attendance.checkOutAt?'Checked out':'Checked in'; res.json({name:user.name,employeeId:user.employeeId,leaveBalance:user.leaveBalance,todayStatus:status,attendance}); });

@@ -1,0 +1,2 @@
+import bcrypt from 'bcryptjs'; import { connectDb } from '../config/db.js'; import { User } from '../models/User.js'; import mongoose from 'mongoose';
+await connectDb(); const passwordHash=await bcrypt.hash('Password123',12); await User.findOneAndUpdate({email:'employee@company.com'},{name:'Srikanth Yadav',employeeId:'EMP-1001',email:'employee@company.com',passwordHash,phone:'555-010-2026',department:'Engineering',leaveBalance:18},{upsert:true,new:true}); console.log('Seed complete: employee@company.com / Password123'); await mongoose.disconnect();

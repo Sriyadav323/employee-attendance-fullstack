@@ -1,0 +1,3 @@
+import { Router } from 'express'; import bcrypt from 'bcryptjs'; import { z } from 'zod'; import { User } from '../models/User.js'; import { signToken } from '../utils/jwt.js';
+export const authRouter=Router();
+authRouter.post('/login',async(req,res)=>{ const input=z.object({email:z.string().email(),password:z.string().min(8)}).parse(req.body); const user=await User.findOne({email:input.email.toLowerCase()}); if(!user||!await bcrypt.compare(input.password,user.passwordHash)) return res.status(401).json({message:'Invalid email or password'}); res.json({token:signToken(user.id),user:{id:user.id,name:user.name,employeeId:user.employeeId,email:user.email,phone:user.phone,department:user.department,profilePicture:user.profilePicture,leaveBalance:user.leaveBalance}}); });
