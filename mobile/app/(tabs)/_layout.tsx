@@ -1,2 +1,48 @@
-import { Tabs } from 'expo-router';
-export default function TabsLayout(){return <Tabs screenOptions={{headerStyle:{backgroundColor:'#0b1020'},headerTintColor:'white',tabBarStyle:{backgroundColor:'#10172a'},tabBarActiveTintColor:'#7da0ff'}}><Tabs.Screen name="dashboard" options={{title:'Dashboard'}}/><Tabs.Screen name="attendance" options={{title:'Attendance'}}/><Tabs.Screen name="leave" options={{title:'Leave'}}/><Tabs.Screen name="history" options={{title:'History'}}/><Tabs.Screen name="profile" options={{title:'Profile'}}/></Tabs>}
+import React from "react";
+import { Tabs } from "expo-router";
+
+export default function TabsLayout() {
+  return (
+    <Tabs>
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          title: "Home",
+          headerTitle: "Employee Portal",
+        }}
+      />
+
+      <Tabs.Screen
+        name="attendance"
+        options={{
+          title: "Attendance",
+          headerTitle: "Attendance",
+        }}
+      />
+
+      <Tabs.Screen
+        name="leave"
+        options={{
+          title: "Apply Leave",
+          headerTitle: "Leave Management",
+        }}
+      />
+
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: "History",
+          headerTitle: "Attendance History",
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          headerTitle: "My Profile",
+        }}
+      />
+    </Tabs>
+  );
+}
