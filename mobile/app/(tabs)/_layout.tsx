@@ -1,14 +1,80 @@
 import React from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
 import { Tabs } from "expo-router";
+
+function TabIcon({
+  icon,
+  focused,
+}: {
+  icon: string;
+  focused: boolean;
+}) {
+  return (
+    <View
+      style={[
+        styles.iconBox,
+        focused && styles.iconBoxActive,
+      ]}
+    >
+      <Text style={styles.icon}>
+        {icon}
+      </Text>
+    </View>
+  );
+}
 
 export default function TabsLayout() {
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        // Remove top header
+        headerShown: false,
+
+        // Tab text colors
+        tabBarActiveTintColor: "#FFFFFF",
+        tabBarInactiveTintColor: "#DDD6FE",
+
+        // Footer / bottom navigation
+        tabBarStyle: {
+          backgroundColor: "#5B21B6",
+
+          borderTopWidth: 0,
+
+          height: 82,
+
+          paddingTop: 8,
+          paddingBottom: 9,
+
+          shadowColor: "#4C1D95",
+          shadowOpacity: 0.28,
+          shadowRadius: 18,
+
+          elevation: 15,
+        },
+
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "700",
+          marginTop: 2,
+        },
+      }}
+    >
       <Tabs.Screen
         name="dashboard"
         options={{
           title: "Home",
-          headerTitle: "Employee Portal",
+
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              icon="🏠"
+              focused={focused}
+            />
+          ),
         }}
       />
 
@@ -16,7 +82,13 @@ export default function TabsLayout() {
         name="attendance"
         options={{
           title: "Attendance",
-          headerTitle: "Attendance",
+
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              icon="📍"
+              focused={focused}
+            />
+          ),
         }}
       />
 
@@ -24,7 +96,13 @@ export default function TabsLayout() {
         name="leave"
         options={{
           title: "Apply Leave",
-          headerTitle: "Leave Management",
+
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              icon="📅"
+              focused={focused}
+            />
+          ),
         }}
       />
 
@@ -32,7 +110,13 @@ export default function TabsLayout() {
         name="history"
         options={{
           title: "History",
-          headerTitle: "Attendance History",
+
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              icon="📊"
+              focused={focused}
+            />
+          ),
         }}
       />
 
@@ -40,9 +124,39 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
-          headerTitle: "My Profile",
+
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              icon="👤"
+              focused={focused}
+            />
+          ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconBox: {
+    width: 42,
+    height: 34,
+
+    borderRadius: 12,
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  iconBoxActive: {
+    backgroundColor: "rgba(255,255,255,0.22)",
+
+    shadowColor: "#FFFFFF",
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+  },
+
+  icon: {
+    fontSize: 19,
+  },
+});

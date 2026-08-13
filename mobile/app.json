@@ -14,7 +14,8 @@
           "locationWhenInUsePermission": "Allow Employee Attendance to capture your location for check-in and check-out."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
