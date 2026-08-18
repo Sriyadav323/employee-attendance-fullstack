@@ -474,10 +474,12 @@ export default function Dashboard() {
           />
         </View>
 
-        <PortalCard
-          style={
-            styles.reminder
-          }
+        <Pressable
+          onPress={() => router.push("/(tabs)/attendance")}
+          style={({ pressed }) => [
+            styles.reminder,
+            pressed && styles.reminderPressed,
+          ]}
         >
           <Text
             style={
@@ -487,7 +489,7 @@ export default function Dashboard() {
             💡
           </Text>
 
-          <View>
+          <View style={styles.reminderContent}>
             <Text
               style={
                 styles.reminderTitle
@@ -508,7 +510,18 @@ export default function Dashboard() {
                 : "Remember to check in when you begin your workday."}
             </Text>
           </View>
-        </PortalCard>
+
+          <View style={styles.reminderAction}>
+            <Text style={styles.reminderActionText}>
+              {todayAttendance?.checkOutAt
+                ? "View details"
+                : todayAttendance?.checkInAt
+                ? "Check out"
+                : "Check in"}
+            </Text>
+            <Text style={styles.reminderArrow}>›</Text>
+          </View>
+        </Pressable>
       </Animated.View>
     </PortalPage>
   );
@@ -1043,6 +1056,46 @@ const styles =
       flexDirection: "row",
 
       alignItems: "center",
+
+      backgroundColor: "#FFFFFF",
+      borderRadius: 18,
+      padding: 22,
+      shadowColor: "#7C3AED",
+      shadowOpacity: 0.08,
+      shadowRadius: 14,
+      elevation: 3,
+    },
+
+    reminderPressed: {
+      opacity: 0.88,
+      transform: [{ scale: 0.995 }],
+    },
+
+    reminderContent: { flex: 1 },
+
+    reminderAction: {
+      marginLeft: 18,
+      minWidth: 104,
+      minHeight: 40,
+      borderRadius: 12,
+      paddingHorizontal: 13,
+      backgroundColor: "#F3E8FF",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 7,
+    },
+
+    reminderActionText: {
+      color: "#7C3AED",
+      fontSize: 11,
+      fontWeight: "800",
+    },
+
+    reminderArrow: {
+      color: "#7C3AED",
+      fontSize: 20,
+      lineHeight: 20,
     },
 
     reminderIcon: {

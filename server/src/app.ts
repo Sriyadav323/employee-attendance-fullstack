@@ -17,7 +17,7 @@ import { errorHandler } from "./middleware/error.js";
 export const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "3mb" }));
 app.use(morgan("dev"));
 
 app.get("/health", (_q, res) => {

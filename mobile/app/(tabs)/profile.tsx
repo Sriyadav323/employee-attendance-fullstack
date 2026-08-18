@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import {
   Image,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -37,6 +38,7 @@ export default function Profile() {
   const [profilePicture, setProfilePicture] = useState("");
 
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [loading, setLoading] = useState(false);
 
   const [showProfileMenu, setShowProfileMenu] =
@@ -52,14 +54,26 @@ export default function Profile() {
   }, [user]);
 
   async function save() {
+    const normalizedPhone = phone.trim();
+
+    if (
+      normalizedPhone &&
+      !/^\+?[0-9()\-\s]{7,20}$/.test(normalizedPhone)
+    ) {
+      setMessageType("error");
+      setMessage("Enter a valid phone number using 7–20 digits.");
+      return;
+    }
+
     try {
       setLoading(true);
       setMessage("");
+      setMessageType("success");
 
       const { data } = await api.patch(
         "/profile",
         {
-          phone,
+          phone: normalizedPhone,
           profilePicture,
         }
       );
@@ -70,12 +84,53 @@ export default function Profile() {
         "Profile updated successfully."
       );
     } catch (error) {
+      setMessageType("error");
       setMessage(
         messageOf(error)
       );
     } finally {
       setLoading(false);
     }
+  }
+
+  function renderWebPhotoPicker() {
+    return React.createElement("input", {
+      type: "file",
+      accept: "image/png,image/jpeg,image/webp",
+      onChange: (event: any) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+
+        if (!file) return;
+
+        if (file.size > 1_400_000) {
+          setMessageType("error");
+          setMessage("Choose an image smaller than 1.4 MB.");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          setProfilePicture(String(reader.result || ""));
+          setMessage("");
+        };
+        reader.onerror = () => {
+          setMessageType("error");
+          setMessage("Unable to read that image. Please choose another file.");
+        };
+        reader.readAsDataURL(file);
+      },
+      style: {
+        width: "100%",
+        boxSizing: "border-box",
+        border: "1px solid #DDD6FE",
+        borderRadius: "12px",
+        padding: "12px",
+        backgroundColor: "#FAF8FF",
+        color: "#475569",
+        cursor: "pointer",
+      },
+    });
   }
 
   async function signOut() {
@@ -498,33 +553,37 @@ export default function Profile() {
           style={styles.input}
         />
 
-        <Text style={styles.label}>
-          Profile Picture URL
-        </Text>
+        <Text style={styles.label}>Profile Picture</Text>
 
-        <TextInput
-          value={profilePicture}
-          onChangeText={(value) => {
-            setProfilePicture(
-              value
-            );
+        {Platform.OS === "web" ? renderWebPhotoPicker() : (
+          <TextInput
+            value={profilePicture}
+            onChangeText={(value) => {
+              setProfilePicture(value);
+              setMessage("");
+            }}
+            placeholder="https://..."
+            placeholderTextColor="#94A3B8"
+            autoCapitalize="none"
+            style={styles.input}
+          />
+        )}
 
-            setMessage("");
-          }}
-          placeholder="https://..."
-          placeholderTextColor="#94A3B8"
-          autoCapitalize="none"
-          style={styles.input}
-        />
+        <View style={styles.photoActions}>
+          <Text style={styles.photoHelp}>JPG, PNG or WebP · Maximum 1.4 MB</Text>
+          {profilePicture ? (
+            <Pressable onPress={() => { setProfilePicture(""); setMessage(""); }}>
+              <Text style={styles.removePhoto}>Remove photo</Text>
+            </Pressable>
+          ) : null}
+        </View>
 
         {message ? (
           <View
-            style={styles.message}
+            style={[styles.message, messageType === "error" && styles.messageError]}
           >
             <Text
-              style={
-                styles.messageText
-              }
+              style={[styles.messageText, messageType === "error" && styles.messageErrorText]}
             >
               {message}
             </Text>
@@ -1154,6 +1213,26 @@ const styles = StyleSheet.create({
       "none" as any,
   },
 
+  photoActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 8,
+  },
+
+  photoHelp: {
+    color: colors.secondary,
+    fontSize: 10,
+  },
+
+  removePhoto: {
+    color: colors.error,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
   message: {
     backgroundColor:
       colors.purpleLight,
@@ -1172,6 +1251,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
 
     fontWeight: "700",
+  },
+
+  messageError: {
+    backgroundColor: "#FEF2F2",
+  },
+
+  messageErrorText: {
+    color: colors.error,
   },
 
   saveButton: {
