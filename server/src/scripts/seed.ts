@@ -15,6 +15,7 @@ async function seed() {
       phone: "6125551001",
       department: "Engineering",
       leaveBalance: 18,
+      role: "employee",
     },
 
     {
@@ -25,6 +26,7 @@ async function seed() {
       phone: "6125551002",
       department: "Quality Engineering",
       leaveBalance: 15,
+      role: "employee",
     },
 
     {
@@ -35,6 +37,7 @@ async function seed() {
       phone: "6125551003",
       department: "Human Resources",
       leaveBalance: 20,
+      role: "employee",
     },
 
     {
@@ -45,6 +48,7 @@ async function seed() {
       phone: "6125551004",
       department: "Finance",
       leaveBalance: 16,
+      role: "employee",
     },
   ];
 
@@ -67,6 +71,10 @@ async function seed() {
         phone: employee.phone,
         department: employee.department,
         leaveBalance: employee.leaveBalance,
+        role: employee.role,
+        approvalStatus: "approved",
+        approvedAt: new Date(),
+        approvedBy: null,
       },
       {
         upsert: true,
