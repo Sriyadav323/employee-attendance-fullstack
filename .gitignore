@@ -6,5 +6,7 @@ node_modules/
 .DS_Store
 
 .expo/
+.netlify/
+.vercel/
 dist/
 web-build/
