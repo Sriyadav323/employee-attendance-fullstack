@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 
 import { User } from "../models/User.js";
 import { requireAdmin } from "../middleware/admin.js";
@@ -140,6 +141,63 @@ adminRouter.get(
     return res.json(
       users
     );
+  }
+);
+
+/*
+ * UPDATE A USER'S PORTAL ROLE
+ */
+adminRouter.patch(
+  "/users/:id/role",
+
+  async (req, res) => {
+    const parsed = z
+      .object({
+        role: z.enum(["employee", "admin"]),
+      })
+      .safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "Choose a valid employee role",
+      });
+    }
+
+    if (req.userId === req.params.id) {
+      return res.status(400).json({
+        message: "You cannot change your own administrator role",
+      });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (user.approvalStatus !== "approved") {
+      return res.status(400).json({
+        message: "Approve this account before assigning a role",
+      });
+    }
+
+    user.role = parsed.data.role;
+    await user.save();
+
+    await notify({
+      userId: user._id,
+      type: "account",
+      title: "Portal role updated",
+      message: `Your portal role is now ${parsed.data.role}.`,
+      key: `role:${user.id}:${parsed.data.role}:${Date.now()}`,
+    });
+
+    return res.json({
+      message: `${user.name} is now an ${parsed.data.role}`,
+      user,
+    });
   }
 );
 

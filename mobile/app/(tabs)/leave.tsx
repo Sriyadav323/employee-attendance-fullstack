@@ -83,6 +83,16 @@ export default function Leave() {
       .slice(0, 10);
   }
 
+  function displayDate(value: string) {
+    if (!value) return "Choose a date";
+
+    return new Date(`${value}T00:00:00`).toLocaleDateString([], {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
   async function submit() {
     setFromError("");
     setToError("");
@@ -295,9 +305,18 @@ export default function Leave() {
 
         <View
           style={
-            styles.formRow
+            styles.dateRangeCard
           }
         >
+          <View style={styles.dateRangeHeading}>
+            <View>
+              <Text style={styles.dateRangeTitle}>Leave period</Text>
+              <Text style={styles.dateRangeSubtitle}>Select the first and last day of your leave</Text>
+            </View>
+            <Text style={styles.dateRangeIcon}>📆</Text>
+          </View>
+
+          <View style={styles.formRow}>
           {/* FROM DATE */}
 
           <View
@@ -310,7 +329,7 @@ export default function Leave() {
                 styles.label
               }
             >
-              From Date
+              START DATE
             </Text>
 
             {Platform.OS ===
@@ -362,8 +381,7 @@ export default function Leave() {
                         styles.datePlaceholder,
                     ]}
                   >
-                    {from ||
-                      "Select From Date"}
+                    {displayDate(from)}
                   </Text>
 
                   <Text
@@ -439,6 +457,10 @@ export default function Leave() {
             ) : null}
           </View>
 
+          <View style={styles.rangeArrow}>
+            <Text style={styles.rangeArrowText}>→</Text>
+          </View>
+
           {/* TO DATE */}
 
           <View
@@ -451,7 +473,7 @@ export default function Leave() {
                 styles.label
               }
             >
-              To Date
+              END DATE
             </Text>
 
             {Platform.OS ===
@@ -496,8 +518,7 @@ export default function Leave() {
                         styles.datePlaceholder,
                     ]}
                   >
-                    {to ||
-                      "Select To Date"}
+                    {displayDate(to)}
                   </Text>
 
                   <Text
@@ -562,6 +583,7 @@ export default function Leave() {
                 {toError}
               </Text>
             ) : null}
+          </View>
           </View>
         </View>
 
@@ -731,7 +753,55 @@ const styles =
 
       gap: 15,
 
+      alignItems: "flex-start",
+    },
+
+    dateRangeCard: {
       marginTop: 25,
+      padding: 20,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: "#DDD6FE",
+      backgroundColor: "#FAF8FF",
+    },
+
+    dateRangeHeading: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 14,
+    },
+
+    dateRangeTitle: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: "800",
+    },
+
+    dateRangeSubtitle: {
+      color: colors.secondary,
+      fontSize: 11,
+      marginTop: 3,
+    },
+
+    dateRangeIcon: {
+      fontSize: 24,
+    },
+
+    rangeArrow: {
+      width: 34,
+      height: 34,
+      marginTop: 31,
+      borderRadius: 17,
+      backgroundColor: "#EDE9FE",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    rangeArrowText: {
+      color: "#7C3AED",
+      fontSize: 18,
+      fontWeight: "800",
     },
 
     fieldColumn: {
