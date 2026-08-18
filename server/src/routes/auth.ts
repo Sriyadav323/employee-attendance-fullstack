@@ -13,13 +13,12 @@ import {
 export const authRouter =
   Router();
 
-/* ======================================================
+/* =========================================================
    REGISTER
-====================================================== */
+========================================================= */
 
 authRouter.post(
   "/register",
-
   async (req, res) => {
     const input = z
       .object({
@@ -33,7 +32,9 @@ authRouter.post(
 
         email: z
           .string()
-          .email(),
+          .email(
+            "Enter a valid email address"
+          ),
 
         password: z
           .string()
@@ -51,7 +52,10 @@ authRouter.post(
         department: z
           .string()
           .trim()
-          .min(2),
+          .min(
+            2,
+            "Department is required"
+          ),
       })
       .parse(req.body);
 
@@ -131,23 +135,27 @@ authRouter.post(
   }
 );
 
-/* ======================================================
+/* =========================================================
    LOGIN
-====================================================== */
+========================================================= */
 
 authRouter.post(
   "/login",
-
   async (req, res) => {
     const input = z
       .object({
         email: z
           .string()
-          .email(),
+          .email(
+            "Enter a valid email address"
+          ),
 
         password: z
           .string()
-          .min(8),
+          .min(
+            8,
+            "Password must contain at least 8 characters"
+          ),
       })
       .parse(req.body);
 
@@ -247,20 +255,19 @@ authRouter.post(
   }
 );
 
-/* ======================================================
+/* =========================================================
    FORGOT PASSWORD
-====================================================== */
+========================================================= */
 
 authRouter.post(
   "/forgot-password",
-
   async (req, res) => {
     const input = z
       .object({
         email: z
           .string()
           .email(
-            "Please enter a valid email address"
+            "Enter a valid email address"
           ),
       })
       .parse(req.body);
@@ -270,13 +277,6 @@ authRouter.post(
         .trim()
         .toLowerCase();
 
-    /*
-     * IMPORTANT:
-     * Always return the same response.
-     *
-     * We don't tell someone whether
-     * an email exists in the database.
-     */
     const genericResponse = {
       message:
         "If an approved account exists for this email address, password reset instructions have been sent.",
@@ -287,10 +287,6 @@ authRouter.post(
         email,
       });
 
-    /*
-     * Only approved users can reset
-     * portal passwords.
-     */
     if (
       !user ||
       user.approvalStatus !==
@@ -301,18 +297,11 @@ authRouter.post(
       );
     }
 
-    /*
-     * Create a cryptographically
-     * secure token.
-     */
     const resetToken =
       crypto
         .randomBytes(32)
         .toString("hex");
 
-    /*
-     * Never store the real token.
-     */
     const resetTokenHash =
       crypto
         .createHash(
@@ -323,9 +312,6 @@ authRouter.post(
         )
         .digest("hex");
 
-    /*
-     * Token valid for 15 minutes.
-     */
     const expiresAt =
       new Date(
         Date.now() +
@@ -334,11 +320,15 @@ authRouter.post(
             1000
       );
 
-    user.passwordResetTokenHash =
-      resetTokenHash;
+    user.set(
+      "passwordResetTokenHash",
+      resetTokenHash
+    );
 
-    user.passwordResetExpiresAt =
-      expiresAt;
+    user.set(
+      "passwordResetExpiresAt",
+      expiresAt
+    );
 
     await user.save();
 
@@ -347,8 +337,7 @@ authRouter.post(
       "http://localhost:8081";
 
     const resetLink =
-      `${frontendUrl}` +
-      `/reset-password?token=${resetToken}`;
+      `${frontendUrl}/reset-password?token=${resetToken}`;
 
     try {
       await sendPasswordResetEmail(
@@ -357,22 +346,22 @@ authRouter.post(
         resetLink
       );
     } catch (error) {
-      /*
-       * If email sending fails,
-       * remove the reset token.
-       */
-      user.passwordResetTokenHash =
-        null;
-
-      user.passwordResetExpiresAt =
-        null;
-
-      await user.save();
-
       console.error(
-        "Password reset email failed:",
+        "Password reset email error:",
         error
       );
+
+      user.set(
+        "passwordResetTokenHash",
+        null
+      );
+
+      user.set(
+        "passwordResetExpiresAt",
+        null
+      );
+
+      await user.save();
 
       return res
         .status(500)
@@ -388,21 +377,20 @@ authRouter.post(
   }
 );
 
-/* ======================================================
+/* =========================================================
    RESET PASSWORD
-====================================================== */
+========================================================= */
 
 authRouter.post(
   "/reset-password",
-
   async (req, res) => {
     const input = z
       .object({
         token: z
           .string()
           .min(
-            20,
-            "Invalid reset token"
+            1,
+            "Reset token is required"
           ),
 
         password: z
@@ -411,31 +399,9 @@ authRouter.post(
             8,
             "Password must contain at least 8 characters"
           ),
-
-        confirmPassword: z
-          .string()
-          .min(8),
       })
-      .refine(
-        (data) =>
-          data.password ===
-          data.confirmPassword,
-
-        {
-          message:
-            "Passwords do not match",
-
-          path: [
-            "confirmPassword",
-          ],
-        }
-      )
       .parse(req.body);
 
-    /*
-     * Hash incoming token so it
-     * can be compared to DB.
-     */
     const tokenHash =
       crypto
         .createHash(
@@ -465,75 +431,34 @@ authRouter.post(
         .status(400)
         .json({
           message:
-            "This password reset link is invalid or has expired.",
+            "This password reset link is invalid or has expired. Please request a new one.",
         });
     }
 
-    /*
-     * Optional stronger password validation.
-     */
-    if (
-      !/[A-Z]/.test(
-        input.password
-      )
-    ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Password must contain at least one uppercase letter.",
-        });
-    }
-
-    if (
-      !/[a-z]/.test(
-        input.password
-      )
-    ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Password must contain at least one lowercase letter.",
-        });
-    }
-
-    if (
-      !/[0-9]/.test(
-        input.password
-      )
-    ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Password must contain at least one number.",
-        });
-    }
-
-    /*
-     * Hash new password.
-     */
-    user.passwordHash =
+    const passwordHash =
       await bcrypt.hash(
         input.password,
         12
       );
 
-    /*
-     * Reset links are single-use.
-     */
-    user.passwordResetTokenHash =
-      null;
+    user.passwordHash =
+      passwordHash;
 
-    user.passwordResetExpiresAt =
-      null;
+    user.set(
+      "passwordResetTokenHash",
+      null
+    );
+
+    user.set(
+      "passwordResetExpiresAt",
+      null
+    );
 
     await user.save();
 
     return res.json({
       message:
-        "Your password has been updated successfully. You can now sign in with your new password.",
+        "Your password has been reset successfully. You can now sign in with your new password.",
     });
   }
 );

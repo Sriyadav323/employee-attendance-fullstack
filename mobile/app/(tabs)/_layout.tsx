@@ -1,4 +1,5 @@
 import React from "react";
+
 import {
   StyleSheet,
   Text,
@@ -6,6 +7,8 @@ import {
 } from "react-native";
 
 import { Tabs } from "expo-router";
+
+import { useAuth } from "../../src/context/AuthContext";
 
 function TabIcon({
   icon,
@@ -18,10 +21,16 @@ function TabIcon({
     <View
       style={[
         styles.iconBox,
-        focused && styles.iconBoxActive,
+
+        focused &&
+          styles.iconBoxActive,
       ]}
     >
-      <Text style={styles.icon}>
+      <Text
+        style={
+          styles.icon
+        }
+      >
         {icon}
       </Text>
     </View>
@@ -29,37 +38,54 @@ function TabIcon({
 }
 
 export default function TabsLayout() {
+  const { user } =
+    useAuth();
+
+  const isAdmin =
+    user?.role ===
+    "admin";
+
   return (
     <Tabs
       screenOptions={{
-        // Remove top header
         headerShown: false,
 
-        // Tab text colors
-        tabBarActiveTintColor: "#FFFFFF",
-        tabBarInactiveTintColor: "#DDD6FE",
+        tabBarActiveTintColor:
+          "#FFFFFF",
 
-        // Footer / bottom navigation
+        tabBarInactiveTintColor:
+          "#DDD6FE",
+
         tabBarStyle: {
-          backgroundColor: "#5B21B6",
+          backgroundColor:
+            "#5B21B6",
 
           borderTopWidth: 0,
 
           height: 82,
 
           paddingTop: 8,
+
           paddingBottom: 9,
 
-          shadowColor: "#4C1D95",
-          shadowOpacity: 0.28,
-          shadowRadius: 18,
+          shadowColor:
+            "#4C1D95",
+
+          shadowOpacity:
+            0.28,
+
+          shadowRadius:
+            18,
 
           elevation: 15,
         },
 
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "700",
+
+          fontWeight:
+            "700",
+
           marginTop: 2,
         },
       }}
@@ -69,10 +95,14 @@ export default function TabsLayout() {
         options={{
           title: "Home",
 
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({
+            focused,
+          }) => (
             <TabIcon
               icon="🏠"
-              focused={focused}
+              focused={
+                focused
+              }
             />
           ),
         }}
@@ -81,12 +111,17 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="attendance"
         options={{
-          title: "Attendance",
+          title:
+            "Attendance",
 
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({
+            focused,
+          }) => (
             <TabIcon
               icon="📍"
-              focused={focused}
+              focused={
+                focused
+              }
             />
           ),
         }}
@@ -95,12 +130,17 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="leave"
         options={{
-          title: "Apply Leave",
+          title:
+            "Apply Leave",
 
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({
+            focused,
+          }) => (
             <TabIcon
               icon="📅"
-              focused={focused}
+              focused={
+                focused
+              }
             />
           ),
         }}
@@ -111,10 +151,14 @@ export default function TabsLayout() {
         options={{
           title: "History",
 
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({
+            focused,
+          }) => (
             <TabIcon
               icon="📊"
-              focused={focused}
+              focused={
+                focused
+              }
             />
           ),
         }}
@@ -125,10 +169,38 @@ export default function TabsLayout() {
         options={{
           title: "Profile",
 
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({
+            focused,
+          }) => (
             <TabIcon
               icon="👤"
-              focused={focused}
+              focused={
+                focused
+              }
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title:
+            "Approvals",
+
+          href:
+            isAdmin
+              ? undefined
+              : null,
+
+          tabBarIcon: ({
+            focused,
+          }) => (
+            <TabIcon
+              icon="🛡️"
+              focused={
+                focused
+              }
             />
           ),
         }}
@@ -137,26 +209,36 @@ export default function TabsLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  iconBox: {
-    width: 42,
-    height: 34,
+const styles =
+  StyleSheet.create({
+    iconBox: {
+      width: 42,
 
-    borderRadius: 12,
+      height: 34,
 
-    alignItems: "center",
-    justifyContent: "center",
-  },
+      borderRadius: 12,
 
-  iconBoxActive: {
-    backgroundColor: "rgba(255,255,255,0.22)",
+      alignItems:
+        "center",
 
-    shadowColor: "#FFFFFF",
-    shadowOpacity: 0.22,
-    shadowRadius: 8,
-  },
+      justifyContent:
+        "center",
+    },
 
-  icon: {
-    fontSize: 19,
-  },
-});
+    iconBoxActive: {
+      backgroundColor:
+        "rgba(255,255,255,0.22)",
+
+      shadowColor:
+        "#FFFFFF",
+
+      shadowOpacity:
+        0.22,
+
+      shadowRadius: 8,
+    },
+
+    icon: {
+      fontSize: 19,
+    },
+  });

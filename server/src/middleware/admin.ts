@@ -11,30 +11,39 @@ export async function requireAdmin(
   res: Response,
   next: NextFunction
 ) {
-  const user =
-    await User.findById(
-      req.userId
-    );
+  try {
+    const user =
+      await User.findById(
+        req.userId
+      );
 
-  if (!user) {
+    if (!user) {
+      return res
+        .status(401)
+        .json({
+          message:
+            "Authentication required",
+        });
+    }
+
+    if (
+      user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({
+          message:
+            "Administrator access required",
+        });
+    }
+
+    next();
+  } catch {
     return res
-      .status(401)
+      .status(500)
       .json({
         message:
-          "Authentication required",
+          "Unable to verify administrator access",
       });
   }
-
-  if (
-    user.role !== "admin"
-  ) {
-    return res
-      .status(403)
-      .json({
-        message:
-          "Administrator access required",
-      });
-  }
-
-  next();
 }
