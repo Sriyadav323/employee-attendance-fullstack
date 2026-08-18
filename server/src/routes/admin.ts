@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 
 import { User } from "../models/User.js";
 import { requireAdmin } from "../middleware/admin.js";
@@ -69,6 +70,19 @@ adminRouter.patch(
     const adminId =
       req.userId;
 
+    const { employeeId } = z
+      .object({
+        employeeId: z
+          .string()
+          .trim()
+          .toUpperCase()
+          .regex(
+            /^[A-Z0-9][A-Z0-9-]{2,19}$/,
+            "Employee ID must be 3-20 characters using letters, numbers, or hyphens"
+          ),
+      })
+      .parse(req.body);
+
     const user =
       await User.findById(
         req.params.id
@@ -94,6 +108,26 @@ adminRouter.patch(
             "User is already approved",
         });
     }
+
+    const employeeIdInUse =
+      await User.exists({
+        employeeId,
+        _id: {
+          $ne: user._id,
+        },
+      });
+
+    if (employeeIdInUse) {
+      return res
+        .status(409)
+        .json({
+          message:
+            "This Employee ID is already assigned to another user",
+        });
+    }
+
+    user.employeeId =
+      employeeId;
 
     user.approvalStatus =
       "approved";
