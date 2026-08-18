@@ -41,9 +41,26 @@ type AccessRequest = {
     | "rejected";
 };
 
+type CorrectionRequest = {
+  _id: string;
+  attendanceDate: string;
+  requestedCheckInAt: string;
+  requestedCheckOutAt?: string | null;
+  reason: string;
+  userId: {
+    name: string;
+    email: string;
+    employeeId?: string;
+    department?: string;
+  };
+};
+
 export default function Admin() {
   const [requests, setRequests] =
     useState<AccessRequest[]>([]);
+
+  const [corrections, setCorrections] =
+    useState<CorrectionRequest[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -63,14 +80,20 @@ export default function Admin() {
         setLoading(true);
         setError("");
 
-        const { data } =
-          await api.get(
-            "/admin/access-requests"
-          );
+        const [accessResponse, correctionResponse] =
+          await Promise.all([
+            api.get("/admin/access-requests"),
+            api.get("/admin/attendance-corrections"),
+          ]);
 
         setRequests(
-          Array.isArray(data)
-            ? data
+          Array.isArray(accessResponse.data)
+            ? accessResponse.data
+            : []
+        );
+        setCorrections(
+          Array.isArray(correctionResponse.data)
+            ? correctionResponse.data
             : []
         );
       } catch (e) {
@@ -139,6 +162,26 @@ export default function Admin() {
       setError(
         messageOf(e)
       );
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  async function reviewCorrection(
+    id: string,
+    decision: "approve" | "reject"
+  ) {
+    try {
+      setActionId(id);
+      setMessage("");
+      setError("");
+      const { data } = await api.patch(
+        `/admin/attendance-corrections/${id}/${decision}`
+      );
+      setMessage(data?.message || `Correction ${decision}d successfully.`);
+      await loadRequests();
+    } catch (e) {
+      setError(messageOf(e));
     } finally {
       setActionId(null);
     }
@@ -322,8 +365,61 @@ export default function Admin() {
           })}
         </View>
       )}
+
+      <View style={styles.correctionHeader}>
+        <Text style={styles.sectionTitle}>Attendance Corrections</Text>
+        <Text style={styles.recordCount}>{corrections.length} pending</Text>
+      </View>
+
+      {corrections.length === 0 ? (
+        <PortalCard style={styles.emptyCard}>
+          <Text style={styles.emptyIcon}>🕒</Text>
+          <Text style={styles.emptyTitle}>No correction requests</Text>
+          <Text style={styles.emptyText}>Submitted attendance corrections will appear here.</Text>
+        </PortalCard>
+      ) : (
+        <View style={styles.requests}>
+          {corrections.map((item) => {
+            const busy = actionId === item._id;
+            return (
+              <PortalCard key={item._id} style={styles.requestCard}>
+                <View style={styles.topRow}>
+                  <View style={styles.avatar}><Text style={styles.avatarText}>🕒</Text></View>
+                  <View style={styles.userInfo}>
+                    <Text style={styles.userName}>{item.userId?.name || "Employee"}</Text>
+                    <Text style={styles.userEmail}>{item.userId?.employeeId || "—"} · {item.userId?.email}</Text>
+                  </View>
+                  <View style={styles.pendingPill}><Text style={styles.pendingText}>Pending</Text></View>
+                </View>
+
+                <View style={styles.details}>
+                  <Detail label="Date" value={item.attendanceDate} />
+                  <Detail label="Requested Check In" value={formatTime(item.requestedCheckInAt)} />
+                  <Detail label="Requested Check Out" value={formatTime(item.requestedCheckOutAt)} />
+                </View>
+
+                <Text style={styles.reasonText}>{item.reason}</Text>
+
+                <View style={styles.actions}>
+                  <Pressable disabled={busy} onPress={() => reviewCorrection(item._id, "reject")} style={[styles.rejectButton, busy && styles.disabled]}>
+                    <Text style={styles.rejectText}>Reject</Text>
+                  </Pressable>
+                  <Pressable disabled={busy} onPress={() => reviewCorrection(item._id, "approve")} style={[styles.approveButton, busy && styles.disabled]}>
+                    {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.approveText}>✓ Approve</Text>}
+                  </Pressable>
+                </View>
+              </PortalCard>
+            );
+          })}
+        </View>
+      )}
     </PortalPage>
   );
+}
+
+function formatTime(value?: string | null) {
+  if (!value) return "—";
+  return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function Detail({
@@ -347,6 +443,33 @@ function Detail({
 }
 
 const styles = StyleSheet.create({
+  correctionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 30,
+  },
+
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+
+  recordCount: {
+    color: colors.secondary,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  reasonText: {
+    color: colors.text,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 18,
+    lineHeight: 20,
+  },
   summaryCard: {
     minWidth: 240,
     flexDirection: "row",

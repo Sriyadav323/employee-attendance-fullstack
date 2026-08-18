@@ -3,6 +3,8 @@ import { Router } from "express";
 import { User } from "../models/User.js";
 import { requireAdmin } from "../middleware/admin.js";
 import { generateUniqueEmployeeId } from "../utils/employeeId.js";
+import { Attendance } from "../models/Attendance.js";
+import { AttendanceCorrection } from "../models/AttendanceCorrection.js";
 
 export const adminRouter =
   Router();
@@ -35,6 +37,78 @@ adminRouter.get(
     return res.json(
       users
     );
+  }
+);
+
+adminRouter.get(
+  "/attendance-corrections",
+  async (_req, res) => {
+    const corrections =
+      await AttendanceCorrection.find({
+        status: "pending",
+      })
+        .populate(
+          "userId",
+          "name email employeeId department"
+        )
+        .sort({ createdAt: -1 });
+
+    return res.json(corrections);
+  }
+);
+
+adminRouter.patch(
+  "/attendance-corrections/:id/:decision",
+  async (req, res) => {
+    const { decision } = req.params;
+
+    if (!["approve", "reject"].includes(decision)) {
+      return res.status(400).json({
+        message: "Invalid review decision",
+      });
+    }
+
+    const correction =
+      await AttendanceCorrection.findById(req.params.id);
+
+    if (!correction) {
+      return res.status(404).json({
+        message: "Correction request not found",
+      });
+    }
+
+    if (correction.status !== "pending") {
+      return res.status(409).json({
+        message: "Correction request has already been reviewed",
+      });
+    }
+
+    if (decision === "approve") {
+      await Attendance.findOneAndUpdate(
+        {
+          userId: correction.userId,
+          attendanceDate: correction.attendanceDate,
+        },
+        {
+          $set: {
+            checkInAt: correction.requestedCheckInAt,
+            checkOutAt: correction.requestedCheckOutAt,
+          },
+        },
+        { upsert: true, new: true }
+      );
+    }
+
+    correction.status =
+      decision === "approve" ? "approved" : "rejected";
+    correction.reviewedBy = req.userId as any;
+    correction.reviewedAt = new Date();
+    await correction.save();
+
+    return res.json({
+      message: `Correction ${correction.status} successfully`,
+      correction,
+    });
   }
 );
 

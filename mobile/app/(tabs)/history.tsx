@@ -16,7 +16,7 @@ import {
   PortalPage,
 } from "../../src/components/PortalUI";
 
-import { api } from "../../src/services/api";
+import { api, messageOf } from "../../src/services/api";
 import { Attendance } from "../../src/types";
 
 export default function History() {
@@ -25,10 +25,68 @@ export default function History() {
   const [to, setTo] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedRange, setSelectedRange] = useState<"7" | "30" | "custom">("7");
+  const [correctionDate, setCorrectionDate] = useState("");
+  const [checkInTime, setCheckInTime] = useState("");
+  const [checkOutTime, setCheckOutTime] = useState("");
+  const [correctionReason, setCorrectionReason] = useState("");
+  const [correctionBusy, setCorrectionBusy] = useState(false);
+  const [correctionMessage, setCorrectionMessage] = useState("");
+  const [correctionError, setCorrectionError] = useState("");
+  const [corrections, setCorrections] = useState<any[]>([]);
 
   useEffect(() => {
     loadPreset("7");
+    loadCorrections();
   }, []);
+
+  async function loadCorrections() {
+    try {
+      const { data } = await api.get("/attendance/corrections");
+      setCorrections(Array.isArray(data) ? data : []);
+    } catch {
+      setCorrections([]);
+    }
+  }
+
+  async function submitCorrection() {
+    setCorrectionError("");
+    setCorrectionMessage("");
+
+    if (!correctionDate || !checkInTime || correctionReason.trim().length < 10) {
+      setCorrectionError("Enter a date, check-in time, and a reason of at least 10 characters.");
+      return;
+    }
+
+    const checkIn = new Date(`${correctionDate}T${checkInTime}:00`);
+    const checkOut = checkOutTime
+      ? new Date(`${correctionDate}T${checkOutTime}:00`)
+      : null;
+
+    if (Number.isNaN(checkIn.getTime()) || checkOut && Number.isNaN(checkOut.getTime())) {
+      setCorrectionError("Enter valid times using HH:MM format.");
+      return;
+    }
+
+    try {
+      setCorrectionBusy(true);
+      await api.post("/attendance/corrections", {
+        attendanceDate: correctionDate,
+        requestedCheckInAt: checkIn.toISOString(),
+        requestedCheckOutAt: checkOut?.toISOString() || null,
+        reason: correctionReason.trim(),
+      });
+      setCorrectionMessage("Correction request submitted for admin review.");
+      setCorrectionDate("");
+      setCheckInTime("");
+      setCheckOutTime("");
+      setCorrectionReason("");
+      await loadCorrections();
+    } catch (e) {
+      setCorrectionError(messageOf(e));
+    } finally {
+      setCorrectionBusy(false);
+    }
+  }
 
   async function loadPreset(days: "7" | "30") {
     setSelectedRange(days);
@@ -197,6 +255,44 @@ export default function History() {
         </View>
       </PortalCard>
 
+      <PortalCard style={styles.correctionCard}>
+        <Text style={styles.sectionTitle}>Request Attendance Correction</Text>
+        <Text style={styles.correctionIntro}>
+          Submit corrected times for a missed or inaccurate attendance record.
+        </Text>
+
+        {correctionMessage ? <Text style={styles.correctionSuccess}>{correctionMessage}</Text> : null}
+        {correctionError ? <Text style={styles.correctionError}>{correctionError}</Text> : null}
+
+        <View style={styles.dateRow}>
+          <CorrectionField label="Attendance Date" value={correctionDate} onChange={setCorrectionDate} placeholder="YYYY-MM-DD" />
+          <CorrectionField label="Check In" value={checkInTime} onChange={setCheckInTime} placeholder="HH:MM" />
+          <CorrectionField label="Check Out (optional)" value={checkOutTime} onChange={setCheckOutTime} placeholder="HH:MM" />
+        </View>
+
+        <Text style={[styles.label, styles.reasonLabel]}>Reason</Text>
+        <TextInput
+          value={correctionReason}
+          onChangeText={setCorrectionReason}
+          placeholder="Explain why this attendance record needs correction"
+          placeholderTextColor="#94A3B8"
+          multiline
+          maxLength={500}
+          style={[styles.input, styles.reasonInput]}
+        />
+
+        <View style={styles.buttonWrap}>
+          <GradientButton title={correctionBusy ? "Submitting..." : "Submit Correction"} disabled={correctionBusy} onPress={submitCorrection} />
+        </View>
+
+        {corrections.slice(0, 5).map((item) => (
+          <View key={item._id} style={styles.correctionStatusRow}>
+            <Text style={styles.correctionStatusDate}>{item.attendanceDate}</Text>
+            <Text style={styles.correctionStatusText}>{item.status.toUpperCase()}</Text>
+          </View>
+        ))}
+      </PortalCard>
+
       <View style={styles.recordsHeader}>
         <Text style={styles.sectionTitle}>Attendance Timeline</Text>
         <Text style={styles.recordCount}>{records.length} records</Text>
@@ -284,6 +380,15 @@ export default function History() {
   );
 }
 
+function CorrectionField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
+  return (
+    <View style={styles.fieldColumn}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor="#94A3B8" style={styles.input} />
+    </View>
+  );
+}
+
 function Detail({
   icon,
   label,
@@ -346,6 +451,57 @@ const styles = StyleSheet.create({
 
   filterCard: {
     marginTop: 22,
+  },
+
+  correctionCard: {
+    marginTop: 22,
+  },
+
+  correctionIntro: {
+    color: colors.secondary,
+    marginTop: 6,
+  },
+
+  correctionSuccess: {
+    color: "#047857",
+    fontWeight: "700",
+    marginTop: 14,
+  },
+
+  correctionError: {
+    color: "#B91C1C",
+    fontWeight: "700",
+    marginTop: 14,
+  },
+
+  reasonLabel: {
+    marginTop: 16,
+  },
+
+  reasonInput: {
+    minHeight: 90,
+    paddingTop: 14,
+    textAlignVertical: "top",
+  },
+
+  correctionStatusRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 12,
+    marginTop: 12,
+  },
+
+  correctionStatusDate: {
+    color: colors.text,
+    fontWeight: "700",
+  },
+
+  correctionStatusText: {
+    color: colors.purple,
+    fontSize: 11,
+    fontWeight: "800",
   },
 
   sectionTitle: {
