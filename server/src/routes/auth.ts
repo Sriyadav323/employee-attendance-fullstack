@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { User } from "../models/User.js";
 import { signToken } from "../utils/jwt.js";
+import { generateUniqueEmployeeId } from "../utils/employeeId.js";
 
 import {
   sendPasswordResetEmail,
@@ -84,12 +85,17 @@ authRouter.post(
         12
       );
 
+    const employeeId =
+      await generateUniqueEmployeeId();
+
     const user =
       await User.create({
         name:
           input.name,
 
         email,
+
+        employeeId,
 
         passwordHash,
 
@@ -124,6 +130,9 @@ authRouter.post(
 
           email:
             user.email,
+
+          employeeId:
+            user.employeeId,
 
           department:
             user.department,

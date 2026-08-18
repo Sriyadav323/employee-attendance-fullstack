@@ -8,7 +8,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
@@ -52,9 +51,6 @@ export default function Admin() {
   const [actionId, setActionId] =
     useState<string | null>(null);
 
-  const [employeeIds, setEmployeeIds] =
-    useState<Record<string, string>>({});
-
   const [message, setMessage] =
     useState("");
 
@@ -95,16 +91,6 @@ export default function Admin() {
   async function approve(
     id: string
   ) {
-    const employeeId =
-      employeeIds[id]?.trim().toUpperCase();
-
-    if (!employeeId) {
-      setError(
-        "Enter an Employee ID before approving this user."
-      );
-      return;
-    }
-
     try {
       setActionId(id);
       setMessage("");
@@ -112,8 +98,7 @@ export default function Admin() {
 
       const { data } =
         await api.patch(
-          `/admin/access-requests/${id}/approve`,
-          { employeeId }
+          `/admin/access-requests/${id}/approve`
         );
 
       setMessage(
@@ -291,37 +276,6 @@ export default function Admin() {
                         : "—"
                     }
                   />
-                </View>
-
-                <View style={styles.employeeIdField}>
-                  <Text style={styles.employeeIdLabel}>
-                    Employee ID
-                  </Text>
-
-                  <TextInput
-                    value={
-                      employeeIds[user._id] ??
-                      user.employeeId ??
-                      ""
-                    }
-                    onChangeText={(value) =>
-                      setEmployeeIds((current) => ({
-                        ...current,
-                        [user._id]: value.toUpperCase(),
-                      }))
-                    }
-                    editable={!busy}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                    maxLength={20}
-                    placeholder="Example: EMP-1005"
-                    placeholderTextColor="#94A3B8"
-                    style={styles.employeeIdInput}
-                  />
-
-                  <Text style={styles.employeeIdHint}>
-                    Required to approve. Use 3-20 letters, numbers, or hyphens.
-                  </Text>
                 </View>
 
                 <View style={styles.actions}>
@@ -561,35 +515,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: 11,
     marginTop: 22,
-  },
-
-  employeeIdField: {
-    marginTop: 20,
-  },
-
-  employeeIdLabel: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: "800",
-    marginBottom: 7,
-  },
-
-  employeeIdInput: {
-    minHeight: 46,
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    borderRadius: 11,
-    backgroundColor: "#FFFFFF",
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "700",
-    paddingHorizontal: 14,
-  },
-
-  employeeIdHint: {
-    color: colors.secondary,
-    fontSize: 10,
-    marginTop: 6,
   },
 
   rejectButton: {
