@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   StyleSheet,
@@ -38,6 +38,69 @@ function TabIcon({
   );
 }
 
+const sidebarTips = [
+  {
+    icon: "⏰",
+    eyebrow: "ATTENDANCE TIP",
+    title: "Start your day on time",
+    message: "Check in when your workday begins so your attendance stays accurate.",
+  },
+  {
+    icon: "🌴",
+    eyebrow: "LEAVE PLANNING",
+    title: "Plan ahead",
+    message: "Submit upcoming leave early to give your team enough time to prepare.",
+  },
+  {
+    icon: "🔔",
+    eyebrow: "STAY UPDATED",
+    title: "Review your alerts",
+    message: "Important approval and attendance updates will appear in your Alerts page.",
+  },
+  {
+    icon: "👥",
+    eyebrow: "ADMIN QUICK TIP",
+    title: "Keep roles current",
+    message: "Use Employees to review team members and maintain the correct access roles.",
+  },
+];
+
+function SidebarBanner() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((current) => (current + 1) % sidebarTips.length);
+    }, 6000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const tip = sidebarTips[index];
+
+  return (
+    <View pointerEvents="none" style={styles.sidebarBanner}>
+      <View style={styles.bannerIconBox}>
+        <Text style={styles.bannerIcon}>{tip.icon}</Text>
+      </View>
+      <Text style={styles.bannerEyebrow}>{tip.eyebrow}</Text>
+      <Text style={styles.bannerTitle}>{tip.title}</Text>
+      <Text style={styles.bannerMessage}>{tip.message}</Text>
+      <View style={styles.bannerDots}>
+        {sidebarTips.map((_, dotIndex) => (
+          <View
+            key={dotIndex}
+            style={[
+              styles.bannerDot,
+              dotIndex === index && styles.bannerDotActive,
+            ]}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export default function TabsLayout() {
   const { width } = useWindowDimensions();
   const desktop = width >= 900;
@@ -69,6 +132,10 @@ export default function TabsLayout() {
         tabBarActiveBackgroundColor: desktop
           ? "rgba(255,255,255,0.16)"
           : "transparent",
+
+        tabBarBackground: desktop
+          ? () => <SidebarBanner />
+          : undefined,
 
         tabBarStyle: {
           backgroundColor:
@@ -298,5 +365,71 @@ const styles =
 
     icon: {
       fontSize: 19,
+    },
+
+    sidebarBanner: {
+      position: "absolute",
+      left: 16,
+      right: 16,
+      bottom: 24,
+      borderRadius: 18,
+      padding: 17,
+      backgroundColor: "rgba(255,255,255,0.13)",
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.2)",
+    },
+
+    bannerIconBox: {
+      width: 40,
+      height: 40,
+      borderRadius: 13,
+      backgroundColor: "rgba(255,255,255,0.16)",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 13,
+    },
+
+    bannerIcon: {
+      fontSize: 20,
+    },
+
+    bannerEyebrow: {
+      color: "#DDD6FE",
+      fontSize: 9,
+      fontWeight: "900",
+      letterSpacing: 1,
+    },
+
+    bannerTitle: {
+      color: "#FFFFFF",
+      fontSize: 14,
+      fontWeight: "800",
+      lineHeight: 19,
+      marginTop: 6,
+    },
+
+    bannerMessage: {
+      color: "#EDE9FE",
+      fontSize: 10,
+      lineHeight: 16,
+      marginTop: 7,
+    },
+
+    bannerDots: {
+      flexDirection: "row",
+      gap: 5,
+      marginTop: 15,
+    },
+
+    bannerDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: "rgba(255,255,255,0.3)",
+    },
+
+    bannerDotActive: {
+      width: 17,
+      backgroundColor: "#FFFFFF",
     },
   });
