@@ -3,6 +3,7 @@ import React from "react";
 import {
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -38,6 +39,9 @@ function TabIcon({
 }
 
 export default function TabsLayout() {
+  const { width } = useWindowDimensions();
+  const desktop = width >= 900;
+
   const { user } =
     useAuth();
 
@@ -49,6 +53,10 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+
+        tabBarPosition: desktop ? "left" : "bottom",
+
+        tabBarLabelPosition: desktop ? "beside-icon" : "below-icon",
 
         tabBarActiveTintColor:
           "#FFFFFF",
@@ -62,11 +70,19 @@ export default function TabsLayout() {
 
           borderTopWidth: 0,
 
-          height: 82,
+          height: desktop ? "100%" : 82,
 
-          paddingTop: 8,
+          width: desktop ? 238 : undefined,
 
-          paddingBottom: 9,
+          borderRightWidth: desktop ? 1 : 0,
+
+          borderRightColor: "rgba(255,255,255,0.12)",
+
+          paddingTop: desktop ? 28 : 8,
+
+          paddingBottom: desktop ? 22 : 9,
+
+          paddingHorizontal: desktop ? 14 : 0,
 
           shadowColor:
             "#4C1D95",
@@ -86,8 +102,20 @@ export default function TabsLayout() {
           fontWeight:
             "700",
 
-          marginTop: 2,
+          marginTop: desktop ? 0 : 2,
+
+          textAlign: "left",
         },
+
+        tabBarItemStyle: desktop
+          ? {
+              flex: 0,
+              height: 58,
+              borderRadius: 14,
+              marginBottom: 5,
+              paddingHorizontal: 7,
+            }
+          : undefined,
       }}
     >
       <Tabs.Screen
@@ -194,6 +222,17 @@ export default function TabsLayout() {
                 focused
               }
             />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="employees"
+        options={{
+          title: "Employees",
+          href: isAdmin ? undefined : null,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon icon="👥" focused={focused} />
           ),
         }}
       />

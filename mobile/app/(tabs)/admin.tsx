@@ -55,28 +55,12 @@ type CorrectionRequest = {
   };
 };
 
-type PortalUser = {
-  _id: string;
-  name: string;
-  email: string;
-  employeeId?: string;
-  department?: string;
-  role: "employee" | "admin";
-  approvalStatus: "pending" | "approved" | "rejected";
-};
-
 export default function Admin() {
   const [requests, setRequests] =
     useState<AccessRequest[]>([]);
 
   const [corrections, setCorrections] =
     useState<CorrectionRequest[]>([]);
-
-  const [users, setUsers] =
-    useState<PortalUser[]>([]);
-
-  const [roleMenuId, setRoleMenuId] =
-    useState<string | null>(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -96,11 +80,10 @@ export default function Admin() {
         setLoading(true);
         setError("");
 
-        const [accessResponse, correctionResponse, usersResponse] =
+        const [accessResponse, correctionResponse] =
           await Promise.all([
             api.get("/admin/access-requests"),
             api.get("/admin/attendance-corrections"),
-            api.get("/admin/users"),
           ]);
 
         setRequests(
@@ -111,14 +94,6 @@ export default function Admin() {
         setCorrections(
           Array.isArray(correctionResponse.data)
             ? correctionResponse.data
-            : []
-        );
-        setUsers(
-          Array.isArray(usersResponse.data)
-            ? usersResponse.data.filter(
-                (user: PortalUser) =>
-                  user.approvalStatus === "approved"
-              )
             : []
         );
       } catch (e) {
@@ -204,31 +179,6 @@ export default function Admin() {
         `/admin/attendance-corrections/${id}/${decision}`
       );
       setMessage(data?.message || `Correction ${decision}d successfully.`);
-      await loadRequests();
-    } catch (e) {
-      setError(messageOf(e));
-    } finally {
-      setActionId(null);
-    }
-  }
-
-  async function updateRole(
-    user: PortalUser,
-    role: PortalUser["role"]
-  ) {
-    setRoleMenuId(null);
-
-    if (user.role === role) return;
-
-    try {
-      setActionId(user._id);
-      setMessage("");
-      setError("");
-      const { data } = await api.patch(
-        `/admin/users/${user._id}/role`,
-        { role }
-      );
-      setMessage(data?.message || "Employee role updated successfully.");
       await loadRequests();
     } catch (e) {
       setError(messageOf(e));
@@ -464,76 +414,6 @@ export default function Admin() {
         </View>
       )}
 
-      <View style={styles.correctionHeader}>
-        <View>
-          <Text style={styles.sectionTitle}>Employee Directory</Text>
-          <Text style={styles.sectionDescription}>
-            View approved employees and assign their portal access role.
-          </Text>
-        </View>
-        <Text style={styles.recordCount}>{users.length} employees</Text>
-      </View>
-
-      <View style={styles.employeeList}>
-        {users.map((user) => {
-          const busy = actionId === user._id;
-          const menuOpen = roleMenuId === user._id;
-
-          return (
-            <PortalCard key={user._id} style={styles.employeeRow}>
-              <View style={styles.employeeIdentity}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>👤</Text>
-                </View>
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{user.name}</Text>
-                  <Text style={styles.userEmail}>{user.email}</Text>
-                  <Text style={styles.employeeMeta}>
-                    {user.employeeId || "ID pending"} · {user.department || "No department"}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.roleControl}>
-                <Text style={styles.roleLabel}>ASSIGNED ROLE</Text>
-                <Pressable
-                  disabled={busy}
-                  onPress={() => setRoleMenuId(menuOpen ? null : user._id)}
-                  style={[styles.roleSelect, menuOpen && styles.roleSelectOpen]}
-                >
-                  {busy ? (
-                    <ActivityIndicator size="small" color="#7C3AED" />
-                  ) : (
-                    <>
-                      <Text style={styles.roleSelectText}>
-                        {user.role === "admin" ? "Administrator" : "Employee"}
-                      </Text>
-                      <Text style={styles.chevron}>{menuOpen ? "▲" : "▼"}</Text>
-                    </>
-                  )}
-                </Pressable>
-
-                {menuOpen ? (
-                  <View style={styles.roleMenu}>
-                    {(["employee", "admin"] as const).map((role) => (
-                      <Pressable
-                        key={role}
-                        onPress={() => updateRole(user, role)}
-                        style={[styles.roleOption, user.role === role && styles.roleOptionActive]}
-                      >
-                        <Text style={[styles.roleOptionText, user.role === role && styles.roleOptionTextActive]}>
-                          {role === "admin" ? "Administrator" : "Employee"}
-                        </Text>
-                        {user.role === role ? <Text style={styles.roleCheck}>✓</Text> : null}
-                      </Pressable>
-                    ))}
-                  </View>
-                ) : null}
-              </View>
-            </PortalCard>
-          );
-        })}
-      </View>
     </PortalPage>
   );
 }
@@ -583,122 +463,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  sectionDescription: {
-    color: colors.secondary,
-    fontSize: 12,
-    marginTop: 4,
-  },
-
-  employeeList: {
-    gap: 12,
-    marginTop: 18,
-  },
-
-  employeeRow: {
-    padding: 18,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 18,
-    overflow: "visible",
-  },
-
-  employeeIdentity: {
-    flex: 1,
-    minWidth: 260,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  employeeMeta: {
-    color: "#64748B",
-    fontSize: 11,
-    marginTop: 6,
-    fontWeight: "600",
-  },
-
-  roleControl: {
-    width: 210,
-    position: "relative",
-    zIndex: 10,
-  },
-
-  roleLabel: {
-    color: "#64748B",
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    marginBottom: 6,
-  },
-
-  roleSelect: {
-    minHeight: 46,
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    backgroundColor: "#FFFFFF",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  roleSelectOpen: {
-    borderColor: "#7C3AED",
-  },
-
-  roleSelectText: {
-    color: colors.text,
-    fontWeight: "700",
-    fontSize: 13,
-  },
-
-  chevron: {
-    color: "#7C3AED",
-    fontSize: 10,
-  },
-
-  roleMenu: {
-    marginTop: 6,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
-    padding: 5,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-
-  roleOption: {
-    minHeight: 40,
-    borderRadius: 9,
-    paddingHorizontal: 11,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  roleOptionActive: {
-    backgroundColor: "#F3E8FF",
-  },
-
-  roleOptionText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  roleOptionTextActive: {
-    color: "#7C3AED",
-  },
-
-  roleCheck: {
-    color: "#7C3AED",
-    fontWeight: "900",
-  },
 
   reasonText: {
     color: colors.text,
