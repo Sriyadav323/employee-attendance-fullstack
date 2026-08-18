@@ -165,24 +165,6 @@ export default function TabsLayout() {
       />
 
       <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-
-          tabBarIcon: ({
-            focused,
-          }) => (
-            <TabIcon
-              icon="👤"
-              focused={
-                focused
-              }
-            />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
         name="notifications"
         options={{
           title: "Alerts",
@@ -208,6 +190,24 @@ export default function TabsLayout() {
           }) => (
             <TabIcon
               icon="🛡️"
+              focused={
+                focused
+              }
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+
+          tabBarIcon: ({
+            focused,
+          }) => (
+            <TabIcon
+              icon="👤"
               focused={
                 focused
               }
