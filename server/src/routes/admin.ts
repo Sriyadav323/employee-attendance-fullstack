@@ -5,6 +5,7 @@ import { requireAdmin } from "../middleware/admin.js";
 import { generateUniqueEmployeeId } from "../utils/employeeId.js";
 import { Attendance } from "../models/Attendance.js";
 import { AttendanceCorrection } from "../models/AttendanceCorrection.js";
+import { notify } from "../utils/notifications.js";
 
 export const adminRouter =
   Router();
@@ -105,6 +106,14 @@ adminRouter.patch(
     correction.reviewedAt = new Date();
     await correction.save();
 
+    await notify({
+      userId: correction.userId,
+      type: "correction",
+      title: `Attendance correction ${correction.status}`,
+      message: `Your attendance correction for ${correction.attendanceDate} was ${correction.status}.`,
+      key: `correction:${correction.id}:${correction.status}`,
+    });
+
     return res.json({
       message: `Correction ${correction.status} successfully`,
       correction,
@@ -186,6 +195,14 @@ adminRouter.patch(
 
     await user.save();
 
+    await notify({
+      userId: user._id,
+      type: "account",
+      title: "Account approved",
+      message: "Your account has been approved. You can now access the employee portal.",
+      key: `account:${user.id}:approved`,
+    });
+
     return res.json({
       message:
         "User approved successfully",
@@ -237,6 +254,14 @@ adminRouter.patch(
       null;
 
     await user.save();
+
+    await notify({
+      userId: user._id,
+      type: "account",
+      title: "Account request rejected",
+      message: "Your account request was not approved. Contact an administrator for assistance.",
+      key: `account:${user.id}:rejected`,
+    });
 
     return res.json({
       message:

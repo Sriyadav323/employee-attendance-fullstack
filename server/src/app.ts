@@ -10,6 +10,7 @@ import { attendanceRouter } from "./routes/attendance.js";
 import { leaveRouter } from "./routes/leaves.js";
 import { profileRouter } from "./routes/profile.js";
 import { adminRouter } from "./routes/admin.js";
+import { notificationRouter } from "./routes/notifications.js";
 
 import { errorHandler } from "./middleware/error.js";
 
@@ -53,6 +54,12 @@ app.use(
   "/api/admin",
   requireAuth,
   adminRouter
+);
+
+app.use(
+  "/api/notifications",
+  requireAuth,
+  notificationRouter
 );
 
 app.use(
