@@ -56,6 +56,8 @@ export default function TabsLayout() {
 
         tabBarPosition: desktop ? "left" : "bottom",
 
+        tabBarVariant: desktop ? "material" : "uikit",
+
         tabBarLabelPosition: desktop ? "beside-icon" : "below-icon",
 
         tabBarActiveTintColor:
@@ -63,6 +65,10 @@ export default function TabsLayout() {
 
         tabBarInactiveTintColor:
           "#DDD6FE",
+
+        tabBarActiveBackgroundColor: desktop
+          ? "rgba(255,255,255,0.16)"
+          : "transparent",
 
         tabBarStyle: {
           backgroundColor:
@@ -78,7 +84,7 @@ export default function TabsLayout() {
 
           borderRightColor: "rgba(255,255,255,0.12)",
 
-          paddingTop: desktop ? 28 : 8,
+          paddingTop: desktop ? 24 : 8,
 
           paddingBottom: desktop ? 22 : 9,
 
@@ -105,15 +111,18 @@ export default function TabsLayout() {
           marginTop: desktop ? 0 : 2,
 
           textAlign: "left",
+
+          lineHeight: 18,
         },
 
         tabBarItemStyle: desktop
           ? {
               flex: 0,
-              height: 58,
+              width: "100%",
+              minHeight: 54,
               borderRadius: 14,
-              marginBottom: 5,
-              paddingHorizontal: 7,
+              marginBottom: 7,
+              paddingHorizontal: 10,
             }
           : undefined,
       }}
